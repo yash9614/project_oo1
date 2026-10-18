@@ -4,6 +4,8 @@ Production-style Retrieval-Augmented Generation system with **access control enf
 
 Built as part of the Telusko Agentic AI Engineering with Python course (session 10-10-2026).
 
+**Tech stack:** Python + LangChain + OpenAI + PostgreSQL + pgvector + FastAPI + Docker
+
 ## Features
 
 - Hybrid search (vector + full-text) with Reciprocal Rank Fusion
@@ -16,27 +18,39 @@ Built as part of the Telusko Agentic AI Engineering with Python course (session 
 
 ## Architecture
 
+### Ingestion flow
+
 ```mermaid
 flowchart TD
-    User([User]) --> Web[Web UI / API]
-    Web --> Assistant[Assistant Pipeline]
-    Assistant --> Intent[Intent Detection]
-    Intent --> Retriever[Retriever]
-    Retriever --> Hybrid[Hybrid Search SQL]
-    Hybrid --> Readable[readable CTE<br/>access control]
-    Readable --> Semantic[Vector ranking]
-    Readable --> Keyword[Full-text ranking]
-    Semantic --> Fuse[RRF Fusion]
-    Keyword --> Fuse
-    Fuse --> Rerank[LLM Rerank]
-    Rerank --> Grade[Grade sufficiency]
-    Grade -->|insufficient| Rewrite[Query Rewrite]
-    Rewrite --> Retriever
-    Grade -->|sufficient| Generator[Generator]
-    Generator --> Ground[Grounding Check]
-    Ground --> Answer[Answer + Citations]
-    Answer --> Audit[Audit Log]
-    Answer --> Web
+    A[Company documents] --> B[Upload documents]
+    B --> C[Check permissions<br/>version and duplicates]
+    C --> D[Split into chunks]
+    D --> E[Generate embeddings]
+    E --> F[PostgreSQL + pgvector]
+    F --> G[Store documents<br/>+ vectors + metadata]
+```
+
+### Query flow (with corrective RAG)
+
+```mermaid
+flowchart TD
+    U[User] --> API[FastAPI + UI]
+    API --> ID[Identify user<br/>HR / Finance / Engineering / Guest]
+    ID --> PF[Permission filtering]
+    PF --> HS[Hybrid search]
+    HS --> VS[Vector search<br/>Meaning]
+    HS --> KS[Keyword search<br/>BM25-like]
+    VS --> RRF[RRF fusion]
+    KS --> RRF
+    RRF --> RR[Reranking]
+    RR --> RC[Relevant chunks]
+    RC --> GR{Check relevance}
+    GR -->|Poor results| RW[Rewrite + search again]
+    RW --> HS
+    GR -->|Relevant| GEN[LLM + documents]
+    GEN --> VER[Verify citations]
+    VER --> ANS[Final AI answer]
+    ANS --> AUD[Audit logging]
 ```
 
 ## Access Control Model
