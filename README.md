@@ -41,32 +41,37 @@ flowchart TD
 
 ## Access Control Model
 
-| Visibility | Who can see it               |
-| ---------- | ---------------------------- |
-| public     | Anyone (including guests)    |
-| internal   | Any employee                 |
-| restricted | Only the matching department |
+| Visibility   | Who can see it                  |
+|--------------|---------------------------------|
+| `public`     | Anyone (including guests)       |
+| `internal`   | Any employee                    |
+| `restricted` | Only the matching department    |
 
+The filter lives in the `readable` CTE. A forbidden document is never ranked and never sent to the model.
 
-# 1. Clone and enter the folder
-git clone https://github.com/yash9614/FastAPI-Projects_oo1.git
-cd FastAPI-Projects_oo1/secure-enterprise-rag
+## Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/yash9614/project_oo1.git
+cd project_oo1
 
 # 2. Create .env
 echo "OPENAI_API_KEY=sk-your-key" > .env
 
 # 3. Start everything
-```
 docker compose up --build
-
+```
 
 Open http://localhost:8000
 
-Switch between Alice (engineering) and Bob (HR)
-Ask “Who may push to production?”
-Alice receives a grounded answer; Bob is escalated
+- Switch between **Alice** (engineering) and **Bob** (HR)
+- Ask “Who may push to production?”
+- Alice receives a grounded answer; Bob is escalated
 
+## Project Structure
 
+```
 .
 ├── assistant/          # pipeline, retrieval, generation, repository, API
 ├── prompts/            # answer, grade, intent, rewrite, rerank
@@ -75,11 +80,17 @@ Alice receives a grounded answer; Bob is escalated
 ├── schema.sql
 ├── docker-compose.yml
 ├── Dockerfile
+├── ask.py             # CLI entry point
 └── pyproject.toml
-
 ```
-### Key Design Decisions
-Access control is a SQL predicate, not a Python filter after retrieval.
-Grounding is verified by string match on the quoted sentence, not by asking the model.
-Documents are identified by content hash, not filename.
-One Postgres holds vectors, full-text index, metadata, and the audit trail.
+
+## Key Design Decisions
+
+- Access control is a SQL predicate, not a Python filter after retrieval.
+- Grounding is verified by string match on the quoted sentence, not by asking the model.
+- Documents are identified by content hash, not filename.
+- One Postgres holds vectors, full-text index, metadata, and the audit trail.
+
+## Bonus Material
+
+See [CONCEPTS.md](CONCEPTS.md) for important concepts and interview-style Q&A.
